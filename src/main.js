@@ -1,8 +1,8 @@
 import * as Utility from "./utility.mjs";
 
-const tasks = [doPage1, doPage2, doPage1, doPage2];
+const tasks = [doCalculatorPage, doTutorialPage];
 
-function doPage1() {
+function doCalculatorPage() {
     const page = document.getElementById("first-page");
     const tableBody = page.querySelector("tbody");
     const addRowBtn = page.querySelector("button.add-row");
@@ -13,6 +13,10 @@ function doPage1() {
     const sumTD = page.querySelector("table.general td.sum");
     const meanTD = page.querySelector("table.general td.mean");
     const squaredTD = page.querySelector("table.general td.squared");
+    const populationVarianceTD = page.querySelector("table.population td.variance");
+    const populationStandardDeviationTD = page.querySelector("table.population td.standard-deviation");
+    const sampleVarianceTD = page.querySelector("table.sample td.variance");
+    const sampleStandardDeviationTD = page.querySelector("table.sample td.standard-deviation");
 
     let rows = [], currentContentEditable = 0, contentEditables = [];
 
@@ -45,7 +49,7 @@ function doPage1() {
         const rowHtml = `
             <tr>
                 <td class="text-center">${n}</td>
-                <td contenteditable="true" data-index="${n}"></td>
+                <td contenteditable="true" data-index="${n}" class="fw-bold text-success"></td>
                 <td class="text-center deviation"></td>
                 <td class="text-center squared"></td>
             </tr>`.trim();
@@ -82,6 +86,8 @@ function doPage1() {
 
         function doStats() {
             let mean = 0, sum = 0, sumOfSquares = 0;
+            let populationVariance = 0, populationStandardDeviation = 0;
+            let sampleVariance = 0, sampleStandardDeviation = 0;
             data.forEach(item => sum += item.value);
 
             if (data.length > 0) {
@@ -101,6 +107,20 @@ function doPage1() {
                 sumTD.innerHTML = sum.toFixed(3);
                 meanTD.innerHTML = mean.toFixed(3);
                 squaredTD.innerHTML = sumOfSquares.toFixed(3);
+                populationVariance = sumOfSquares / data.length;
+                populationStandardDeviation = Math.sqrt(populationVariance);
+                populationVarianceTD.innerHTML = populationVariance.toFixed(3);
+                populationStandardDeviationTD.innerHTML = populationStandardDeviation.toFixed(3);
+                if(data.length > 1){
+                    sampleVariance = sumOfSquares / (data.length - 1);
+                    sampleStandardDeviation = Math.sqrt(sampleVariance);
+                    sampleVarianceTD.innerHTML = sampleVariance.toFixed(3);
+                    sampleStandardDeviationTD.innerHTML = sampleStandardDeviation.toFixed(3);
+                }
+                else{
+                    sampleVarianceTD.innerHTML = "&mdash;";
+                    sampleStandardDeviationTD.innerHTML = "&mdash;";
+                }
             }
             else {
                 xBarSpan.innerHTML = "&mdash;";
@@ -139,7 +159,6 @@ function doPage1() {
         deleteRowBtn.addEventListener("click", deleteRowBtnClick);
         calculateBtn.addEventListener("click", calculateBtnClick);
     }
-
 
     initialisePage();
 

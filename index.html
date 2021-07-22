@@ -38,14 +38,7 @@
             <p>
                 You can add more rows if you need to and you do not have to use all the rows.
             </p>
-            <div class="text-center">
-                <button type="button" class="btn btn-primary add-row" title="Add a new row to the table">Add
-                    Row</button>
-                <button type="button" class="btn btn-primary delete-row">Delete Row</button>
-                <button type="button" class="btn btn-primary calculate">Calculate</button>
-                <button type="button" class="btn btn-primary variance-tutorial">Variance Tutorial</button>
-            </div>
-            <table class="table table-bordered mt-4 table-sm">
+            <table class="table table-bordered mt-4 text-center table-sm">
                 <thead>
                     <tr>
                         <th colspan="4" class="text-center"><span class="math-ex">x&#772; = </span> <span
@@ -54,8 +47,8 @@
                     <tr>
                         <th>Participant ID</th>
                         <th><span class="math-ex">x</span> data</th>
-                        <th>(<span class="math-ex"> x &minus; x&#772; </span>) deviation scores</th>
-                        <th>(<span class="math-ex"> x &minus; x&#772; </span>)&#xb2; squared deviation scores</th>
+                        <th>Deviation scores<br><span class="math-ex">( x &minus; x&#772; )</span></th>
+                        <th>Squared deviation scores<br><span class="math-ex">( x &minus; x&#772; )</span>&#xb2;</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,7 +72,7 @@
                     </tr>
                 </tbody>
             </table>
-            <table class="table table-bordered mt-2 text-center table-sm">
+            <table class="table table-bordered mt-2 text-center table-sm population">
                 <thead>
                     <tr>
                         <th>The population variance<br><span class="math-ex">&sigma;&#xb2; = &sum; ( x &minus; x&#772; )&#xb2; / N</span></th>
@@ -88,12 +81,12 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>&mdash;</td>
-                        <td>&mdash;</td>
+                        <td class="variance">&mdash;</td>
+                        <td class="standard-deviation">&mdash;</td>
                     </tr>
                 </tbody>
             </table>
-            <table class="table table-bordered mt-2 text-center table-sm">
+            <table class="table table-bordered mt-2 text-center table-sm sample">
                 <thead>
                     <tr>
                         <th>The sample variance<br><span class="math-ex">s&#xb2; = &sum; ( x &minus; x&#772; )&#xb2; / (N - 1)</span></th>
@@ -102,11 +95,21 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>&mdash;</td>
-                        <td>&mdash;</td>
+                        <td class="variance">&mdash;</td>
+                        <td class="standard-deviation">&mdash;</td>
                     </tr>
                 </tbody>
             </table>
+            <div class="text-center">
+                <button type="button" class="btn btn-primary add-row" title="Add a new row to the table">Add
+                    Row</button>
+                <button type="button" class="btn btn-primary delete-row">Delete Row</button>
+                <button type="button" class="btn btn-primary calculate">Calculate</button>
+                <button type="button" class="btn btn-primary variance-tutorial">Variance Tutorial</button>
+            </div>
+        </div>
+        <div class="page-content" id="tutorial-page">
+            
         </div>
         <!----------------------------------------------------------------------------------------------------->
         <div class="page-content" id="second-page">

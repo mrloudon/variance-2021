@@ -1,4 +1,5 @@
 const
+    PAUSE = 500,
     AXES_COLOUR = "#666",
     TEXT_COLOUR = "#444",
     ALERT_BLUE = "#cff4fc",
@@ -23,7 +24,7 @@ const
     X_AXIS_LENGTH = WIDTH - LEFT_PAD - RIGHT_PAD,
     Y_SCALE = Y_AXIS_HEIGHT / Y_MAX;
 
-let canvas, params, xInterval, mean, self;
+let canvas, params, xInterval, mean, graphVisible = false;
 
 function drawTicks() {
     let i, temp;
@@ -135,7 +136,7 @@ function drawLabels() {
     });
 }
 
-function drawMean() {
+function drawMean(callback) {
     var
         txt = 'Mean ' + mean.toFixed(1);
 
@@ -162,9 +163,11 @@ function drawMean() {
         text: txt
     });
     canvas.drawLayers();
+    graphVisible = true;
+    setTimeout(callback, PAUSE);
 }
 
-function plotData() {
+function plotData(callback) {
     let i, timer;
 
     function plotDatum() {
@@ -200,6 +203,7 @@ function plotData() {
         });
         if (++i >= params.data.length) {
             clearInterval(timer);
+            setTimeout(() => drawMean(callback), PAUSE);
         }
     }
 
@@ -223,29 +227,75 @@ function plotData() {
 
 }
 
+function plotDeviations(callback) {
+    let
+        i = 1,
+        timer;
+
+    function drawStem() {
+        const offset = params.data[i - 1].yVal > mean ? DATUM_RADIUS : -1 * DATUM_RADIUS;
+        canvas.drawLine({
+            layer: true,
+            name: params.data[i - 1].xLabel + "dev",
+            groups: ['stems'],
+            strokeStyle: 'rgb(51,51,51)',
+            strokeDash: [2],
+            strokeDashOffset: 0,
+            strokeWidth: 2,
+            x1: LEFT_PAD + i * xInterval,
+            y1: TOP_PAD + Y_AXIS_HEIGHT + offset - Y_SCALE * params.data[i - 1].yVal,
+            x2: LEFT_PAD + i * xInterval,
+            y2: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * mean
+        });
+    }
+
+    timer = window.setInterval(function () {
+        drawStem();
+        if (++i > params.data.length) {
+            window.clearInterval(timer);
+            callback();
+        }
+    }, DEVIATION_DISPLAY_TIME);
+}
+
 function setupTable() {
     const head = params.page.querySelector("thead tr");
-    const body = params.page.querySelector("tbody tr");
+    const dataRow = params.page.querySelector("tbody tr.data");
+
+    let th, td;
+    th = document.createElement("th");
+    th.innerHTML = "Participant";
+    head.appendChild(th);
+    th = document.createElement("th");
+    th.innerHTML = "Score (%)";
+    dataRow.appendChild(th);
     params.data.forEach(item => {
-        const th = document.createElement("th");
-        const td = document.createElement("td");
+        th = document.createElement("th");
+        td = document.createElement("td");
         th.innerHTML = item.xLabel;
         td.innerHTML = "&mdash;";
         td.id = `${item.xLabel}td`;
         td.addEventListener("mouseenter", evt => {
+            if (!graphVisible) {
+                return;
+            }
+
             const name = evt.currentTarget.id;
             evt.currentTarget.style.backgroundColor = ALERT_BLUE;
             canvas.setLayer(canvas.getLayer(name), {
                 fillStyle: "blue"
             });
             canvas.setLayer('message', {
-                text: name.slice(0,-2) + ": " + evt.currentTarget.innerHTML + "%",
+                text: name.slice(0, -2) + ": " + evt.currentTarget.innerHTML + "%",
                 visible: true
             });
             canvas.drawLayers();
-            //canvas.drawLayer("message");
         });
         td.addEventListener("mouseleave", evt => {
+            if (!graphVisible) {
+                return;
+            }
+
             const name = evt.currentTarget.id;
             evt.currentTarget.style.backgroundColor = "#fafafa";
             canvas.setLayer(canvas.getLayer(name), {
@@ -256,15 +306,31 @@ function setupTable() {
                 visible: false
             });
             canvas.drawLayers();
-            //canvas.drawLayer("message");
         });
         head.appendChild(th);
-        body.appendChild(td);
+        dataRow.appendChild(td);
     });
 }
 
+function showTableDeviations() {
+    const tableBody = params.page.querySelector("tbody");
+    const deviationsRow = document.createElement("tr");
+    const th = document.createElement("th");
+
+    th.innerHTML = "Deviation (%)";
+    deviationsRow.appendChild(th);
+
+    params.data.forEach(item => {
+        const td = document.createElement("td");
+        td.innerHTML = (item.yVal - mean).toFixed(1);
+        deviationsRow.appendChild(td);
+    });
+
+    tableBody.appendChild(deviationsRow);
+}
+
 function showTableData() {
-    const tds = params.page.querySelectorAll("tbody tr td");
+    const tds = params.page.querySelectorAll("tbody tr.data td");
     let i;
 
     if (tds.length === params.data.length) {
@@ -316,8 +382,9 @@ function init(paramaters) {
 export {
     init,
     showTableData,
+    showTableDeviations,
     getMeanCalculationHTML,
     showMeanCalculationResult,
     plotData,
-    drawMean
+    plotDeviations
 };

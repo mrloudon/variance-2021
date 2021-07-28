@@ -231,9 +231,26 @@ function doTutorialPage() {
                 }, PAUSE);
                 break;
             case "plot-data":
+                alert.innerHTML = "&nbsp;";
                 Utility.fadeIn(document.getElementById("graph1"));
                 Utility.wait(PAUSE)
-                    .then(() => Graph.plotData());
+                    .then(() => {
+                        function plotDataCallback() {
+                            alert.innerHTML = `<p>Now we will calculate the deviation from the mean for each score<br>
+                            <span class="math-ex">( x &minus; x&#772; )</span></p>
+                            <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph)</small></p>`;
+                            continueBtn.disabled = false;
+                            state = "plot-deviations";
+                        }
+                        Graph.plotData(plotDataCallback);
+                    });
+                break;
+            case "plot-deviations":
+                alert.innerHTML = "&nbsp;";
+                Graph.showTableDeviations();
+                Graph.plotDeviations(() => {
+                    console.log("Plotted");
+                });
                 break;
         }
     }

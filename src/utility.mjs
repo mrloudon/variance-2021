@@ -67,10 +67,17 @@ function sanatise(str, length){
     return trimmed;
 }
 
+function wait(n) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, n);
+    });
+}
+
 export {
     fadeIn,
     fadeOut,
     ready,
     postCSV,
-    sanatise
+    sanatise,
+    wait
 };

@@ -1,4 +1,5 @@
 import * as Utility from "./utility.mjs";
+import * as Graph from "./graph.mjs";
 
 const tasks = [doCalculatorPage, doTutorialPage];
 
@@ -8,6 +9,7 @@ function doCalculatorPage() {
     const addRowBtn = page.querySelector("button.add-row");
     const deleteRowBtn = page.querySelector("button.delete-row");
     const calculateBtn = page.querySelector("button.calculate");
+    const tutorialBtn = page.querySelector("button.variance-tutorial");
     const xBarSpan = page.querySelector("#x-bar");
     const nTD = page.querySelector("table.general td.N");
     const sumTD = page.querySelector("table.general td.sum");
@@ -111,13 +113,13 @@ function doCalculatorPage() {
                 populationStandardDeviation = Math.sqrt(populationVariance);
                 populationVarianceTD.innerHTML = populationVariance.toFixed(3);
                 populationStandardDeviationTD.innerHTML = populationStandardDeviation.toFixed(3);
-                if(data.length > 1){
+                if (data.length > 1) {
                     sampleVariance = sumOfSquares / (data.length - 1);
                     sampleStandardDeviation = Math.sqrt(sampleVariance);
                     sampleVarianceTD.innerHTML = sampleVariance.toFixed(3);
                     sampleStandardDeviationTD.innerHTML = sampleStandardDeviation.toFixed(3);
                 }
-                else{
+                else {
                     sampleVarianceTD.innerHTML = "&mdash;";
                     sampleStandardDeviationTD.innerHTML = "&mdash;";
                 }
@@ -140,6 +142,20 @@ function doCalculatorPage() {
         doStats();
     }
 
+    function tutorialBtnClick() {
+        contentEditables = tableBody.querySelectorAll("td[contenteditable='true']");
+        contentEditables.forEach(element => {
+            element.removeEventListener("keydown", contentEditableKeyDown);
+            element.removeEventListener("click", contentEditableClick);
+        });
+        addRowBtn.removeEventListener("click", addRowBtnClick);
+        deleteRowBtn.removeEventListener("click", deleteRowBtnClick);
+        calculateBtn.removeEventListener("click", calculateBtnClick);
+        tutorialBtn.removeEventListener("click", tutorialBtnClick);
+        Utility.fadeOut(page)
+            .then(nextTask);
+    }
+
     function initialisePage() {
         let i;
 
@@ -158,6 +174,7 @@ function doCalculatorPage() {
         addRowBtn.addEventListener("click", addRowBtnClick);
         deleteRowBtn.addEventListener("click", deleteRowBtnClick);
         calculateBtn.addEventListener("click", calculateBtnClick);
+        tutorialBtn.addEventListener("click", tutorialBtnClick);
     }
 
     initialisePage();
@@ -166,17 +183,73 @@ function doCalculatorPage() {
         .then(initialisePage);
 }
 
-function doPage2() {
-    const page = document.getElementById("second-page");
-    const nextBtn = page.querySelector("button.btn-primary");
+function doTutorialPage() {
+    const PAUSE = 500;
+    const page = document.getElementById("tutorial-page");
+    const alert = page.querySelector("div.alert");
+    const continueBtn = page.querySelector("button.continue-btn");
 
-    function nextClick() {
-        nextBtn.removeEventListener("click", nextClick);
-        Utility.fadeOut(page).then(nextTask);
+    let state = "show-data";
+
+    function generateData(n, min, max) {
+        let
+            i, data = [];
+
+        function Datum(xLabel, yVal) {
+            this.xLabel = xLabel;
+            this.yVal = yVal;
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        for (i = 1; i <= n; i++) {
+            data.push(new Datum(("P" + i), getRandomInt(min, max)));
+        }
+        return data;
     }
 
-    nextBtn.addEventListener("click", nextClick);
-    Utility.fadeIn(page);
+    function continueClick() {
+        continueBtn.disabled = true;
+        switch (state) {
+            case "show-data":
+                Graph.showTableData();
+                alert.innerHTML = "&nbsp;";
+                state = "calculate-mean";
+                setTimeout(() => {
+                    alert.innerHTML = `Now we will calculate the mean by summing the participant scores, 
+                        <span class="math-ex">x</span>, and dividing by the number of partipants, <span class="math-ex">N</span>`;
+                    continueBtn.disabled = false;
+                }, PAUSE);
+                break;
+            case "calculate-mean":
+                alert.innerHTML = Graph.getMeanCalculationHTML();
+                state = "plot-data";
+                setTimeout(() => {
+                    continueBtn.disabled = false;
+                    Graph.showMeanCalculationResult();
+                }, PAUSE);
+                break;
+            case "plot-data":
+                Utility.fadeIn(document.getElementById("graph1"));
+                Utility.wait(PAUSE)
+                    .then(() => Graph.plotData());
+                break;
+        }
+    }
+
+    Graph.init({
+        canvasID: "#graph1",
+        title: "Particpant Scores",
+        xAxisLabel: "Participant ID",
+        yAxisLabel: "Score (%)",
+        page,
+        data: generateData(10, 5, 95)
+    });
+
+    continueBtn.addEventListener("click", continueClick);
+    Utility.fadeIn(page)
+        .then(() => setTimeout(() => alert.innerHTML = "First, we will create some data to analyse. In this case, 10 random percentage scores.", PAUSE));
 }
 
 function nextTask(result) {

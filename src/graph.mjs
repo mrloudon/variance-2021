@@ -3,6 +3,7 @@ const
     AXES_COLOUR = "#666",
     TEXT_COLOUR = "#444",
     ALERT_BLUE = "#cff4fc",
+    BACKGROUND = "#fafafa",
     DATUM_DISPLAY_TIME = 200,
     SQUARE_FILL = 'rgba(255,0,0,0.25)',
     SQUARE_HIGHLIGHT_FILL = 'rgba(0,0,255,0.25)',
@@ -24,7 +25,10 @@ const
     X_AXIS_LENGTH = WIDTH - LEFT_PAD - RIGHT_PAD,
     Y_SCALE = Y_AXIS_HEIGHT / Y_MAX;
 
-let canvas, params, xInterval, mean, graphVisible = false;
+let canvas, params, xInterval, mean;
+let graphVisible = false;
+let deviationsVisible = false;
+let squaresVisible = false;
 
 function drawTicks() {
     let i, temp;
@@ -241,11 +245,17 @@ function plotDeviations(callback) {
             strokeStyle: 'rgb(51,51,51)',
             strokeDash: [2],
             strokeDashOffset: 0,
-            strokeWidth: 2,
+            strokeWidth: 4,
             x1: LEFT_PAD + i * xInterval,
             y1: TOP_PAD + Y_AXIS_HEIGHT + offset - Y_SCALE * params.data[i - 1].yVal,
             x2: LEFT_PAD + i * xInterval,
-            y2: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * mean
+            y2: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * mean,
+            mouseover: function (layer) {
+                document.getElementById(layer.name).dispatchEvent(new Event("mouseenter"));
+            },
+            mouseout: function (layer) {
+                document.getElementById(layer.name).dispatchEvent(new Event("mouseleave"));
+            }
         });
     }
 
@@ -253,6 +263,7 @@ function plotDeviations(callback) {
         drawStem();
         if (++i > params.data.length) {
             window.clearInterval(timer);
+            deviationsVisible = true;
             callback();
         }
     }, DEVIATION_DISPLAY_TIME);
@@ -297,11 +308,11 @@ function setupTable() {
             }
 
             const name = evt.currentTarget.id;
-            evt.currentTarget.style.backgroundColor = "#fafafa";
+            evt.currentTarget.style.backgroundColor = BACKGROUND;
             canvas.setLayer(canvas.getLayer(name), {
-                fillStyle: "#cff4fc"
+                fillStyle: ALERT_BLUE
             });
-            canvas.setLayer('message', {
+            canvas.setLayer("message", {
                 text: "             ",
                 visible: false
             });
@@ -323,10 +334,93 @@ function showTableDeviations() {
     params.data.forEach(item => {
         const td = document.createElement("td");
         td.innerHTML = (item.yVal - mean).toFixed(1);
+        td.id = `${item.xLabel}dev`;
+        td.addEventListener("mouseenter", evt => {
+            if (!deviationsVisible) {
+                return;
+            }
+            const name = evt.currentTarget.id;
+            evt.currentTarget.style.backgroundColor = ALERT_BLUE;
+            canvas.setLayer(canvas.getLayer(name), {
+                strokeStyle: DEVIATION_HIGHLIGHT_STROKE,
+                strokeDash: 0,
+                strokeWidth: 4
+            });
+            canvas.setLayer("message", {
+                text: name.slice(0, -3) + " deviation: " + evt.currentTarget.innerHTML + "%",
+                visible: true
+            });
+            canvas.drawLayers();
+        });
+        td.addEventListener("mouseleave", evt => {
+            if (!deviationsVisible) {
+                return;
+            }
+            const name = evt.currentTarget.id;
+            evt.currentTarget.style.backgroundColor = BACKGROUND;
+            canvas.setLayer(canvas.getLayer(name), {
+                strokeStyle: DEVIATION_STROKE,
+                strokeDash: [2],
+                strokeWidth: 4
+            });
+            canvas.setLayer("message", {
+                text: "                      ",
+                visible: false
+            });
+            canvas.drawLayers();
+        });
         deviationsRow.appendChild(td);
     });
 
     tableBody.appendChild(deviationsRow);
+}
+
+function showTableSquares(){
+    const tableBody = params.page.querySelector("tbody");
+    const squaresRow = document.createElement("tr");
+    const th = document.createElement("th");
+
+    th.innerHTML = "Squared Deviation";
+    squaresRow.appendChild(th);
+
+    params.data.forEach(item => {
+        const td = document.createElement("td");
+        td.innerHTML = ((item.yVal - mean)**2).toFixed(1);
+        td.id = `${item.xLabel}tsd`;
+        td.addEventListener("mouseenter", evt => {
+            if (!squaresVisible) {
+                return;
+            }
+            const name = evt.currentTarget.id;
+            evt.currentTarget.style.backgroundColor = ALERT_BLUE;
+            canvas.setLayer(canvas.getLayer(name), {
+                
+            });
+            canvas.setLayer("message", {
+                text: name.slice(0, -3) + " squared deviation: " + evt.currentTarget.innerHTML,
+                visible: true
+            });
+            canvas.drawLayers();
+        });
+        td.addEventListener("mouseleave", evt => {
+            if (!squaresVisible) {
+                return;
+            }
+            const name = evt.currentTarget.id;
+            evt.currentTarget.style.backgroundColor = BACKGROUND;
+            canvas.setLayer(canvas.getLayer(name), {
+               
+            });
+            canvas.setLayer("message", {
+                text: "                             ",
+                visible: false
+            });
+            canvas.drawLayers();
+        });
+        squaresRow.appendChild(td);
+    });
+
+    tableBody.appendChild(squaresRow); 
 }
 
 function showTableData() {
@@ -383,6 +477,7 @@ export {
     init,
     showTableData,
     showTableDeviations,
+    showTableSquares,
     getMeanCalculationHTML,
     showMeanCalculationResult,
     plotData,

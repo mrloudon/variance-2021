@@ -238,7 +238,7 @@ function doTutorialPage() {
                         function plotDataCallback() {
                             alert.innerHTML = `<p>Now we will calculate the deviation from the mean for each score<br>
                             <span class="math-ex">( x &minus; x&#772; )</span></p>
-                            <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph)</small></p>`;
+                            <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph and vice-versa)</small></p>`;
                             continueBtn.disabled = false;
                             state = "plot-deviations";
                         }
@@ -249,8 +249,16 @@ function doTutorialPage() {
                 alert.innerHTML = "&nbsp;";
                 Graph.showTableDeviations();
                 Graph.plotDeviations(() => {
-                    console.log("Plotted");
+                    alert.innerHTML = `<p>Now we will calcluate the square of each deviation from the mean<br>
+                        <span class="math-ex">( x &minus; x&#772; )</span>&#xb2;</p>
+                        <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph and vice-versa)</small></p>`;
+                    continueBtn.disabled = false;
+                    state = "plot-squares";
                 });
+                break;
+            case "plot-squares":
+                alert.innerHTML = "&nbsp;";
+                Graph.showTableSquares();
                 break;
         }
     }

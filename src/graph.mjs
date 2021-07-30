@@ -269,6 +269,56 @@ function plotDeviations(callback) {
     }, DEVIATION_DISPLAY_TIME);
 }
 
+function plotSquares(callback) {
+
+    let i = 1, timer;
+
+    function drawSquare() {
+        let
+            x, y, delta, dev,
+            yMean = TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * mean;
+
+        if (params.data[i - 1].yVal - mean >= 0) {
+            y = TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * params.data[i - 1].yVal;
+        } else {
+            y = yMean;
+        }
+        x = LEFT_PAD + i * xInterval;
+        dev = params.data[i - 1].yVal - mean;
+        delta = Math.abs(dev * Y_SCALE);
+        canvas.drawRect({
+            layer: true,
+            index: 0,
+            name: params.data[i - 1].xLabel + "tsd",
+            groups: ["squares"],
+            fromCenter: false,
+            fillStyle: SQUARE_FILL,
+            x: x,
+            y: y,
+            height: delta,
+            width: delta,
+            mouseover: function (layer) {
+                console.log("Over", layer.name);
+                document.getElementById(layer.name).dispatchEvent(new Event("mouseenter"));
+            },
+            mouseout: function (layer) {
+                console.log("Out", layer.name);
+                document.getElementById(layer.name).dispatchEvent(new Event("mouseleave"));
+            }
+        });
+        canvas.drawLayers();
+    }
+
+    timer = setInterval(function () {
+        drawSquare();
+        if (++i > params.data.length) {
+            clearInterval(timer);
+            squaresVisible = true;
+            callback();
+        }
+    }, SQUARE_DISPLAY_TIME);
+}
+
 function setupTable() {
     const head = params.page.querySelector("thead tr");
     const dataRow = params.page.querySelector("tbody tr.data");
@@ -375,7 +425,7 @@ function showTableDeviations() {
     tableBody.appendChild(deviationsRow);
 }
 
-function showTableSquares(){
+function showTableSquares() {
     const tableBody = params.page.querySelector("tbody");
     const squaresRow = document.createElement("tr");
     const th = document.createElement("th");
@@ -385,7 +435,7 @@ function showTableSquares(){
 
     params.data.forEach(item => {
         const td = document.createElement("td");
-        td.innerHTML = ((item.yVal - mean)**2).toFixed(1);
+        td.innerHTML = ((item.yVal - mean) ** 2).toFixed(1);
         td.id = `${item.xLabel}tsd`;
         td.addEventListener("mouseenter", evt => {
             if (!squaresVisible) {
@@ -394,7 +444,7 @@ function showTableSquares(){
             const name = evt.currentTarget.id;
             evt.currentTarget.style.backgroundColor = ALERT_BLUE;
             canvas.setLayer(canvas.getLayer(name), {
-                
+                fillStyle: SQUARE_HIGHLIGHT_FILL
             });
             canvas.setLayer("message", {
                 text: name.slice(0, -3) + " squared deviation: " + evt.currentTarget.innerHTML,
@@ -409,7 +459,7 @@ function showTableSquares(){
             const name = evt.currentTarget.id;
             evt.currentTarget.style.backgroundColor = BACKGROUND;
             canvas.setLayer(canvas.getLayer(name), {
-               
+                fillStyle: SQUARE_FILL
             });
             canvas.setLayer("message", {
                 text: "                             ",
@@ -420,7 +470,7 @@ function showTableSquares(){
         squaresRow.appendChild(td);
     });
 
-    tableBody.appendChild(squaresRow); 
+    tableBody.appendChild(squaresRow);
 }
 
 function showTableData() {
@@ -432,7 +482,6 @@ function showTableData() {
             tds[i].innerHTML = params.data[i].yVal;
         }
     }
-    console.log(tds);
 }
 
 function getMeanCalculationHTML() {
@@ -469,7 +518,6 @@ function init(paramaters) {
     drawAxes();
     drawTicks();
     drawLabels();
-    console.log(params.data);
     setupTable();
 }
 
@@ -481,5 +529,6 @@ export {
     getMeanCalculationHTML,
     showMeanCalculationResult,
     plotData,
-    plotDeviations
+    plotDeviations,
+    plotSquares
 };

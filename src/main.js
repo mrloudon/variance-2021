@@ -186,10 +186,12 @@ function doCalculatorPage() {
 function doTutorialPage() {
     const PAUSE = 500;
     const page = document.getElementById("tutorial-page");
-    const alert = page.querySelector("div.alert");
+    const firstAlert = page.querySelector("div.first-alert");
+    const secondAlert = page.querySelector("div.second-alert");
     const continueBtn = page.querySelector("button.continue-btn");
 
     let state = "show-data";
+    //let state = "calculate-variance";
 
     function generateData(n, min, max) {
         let
@@ -210,20 +212,21 @@ function doTutorialPage() {
     }
 
     function continueClick() {
+        let stats;
         continueBtn.disabled = true;
         switch (state) {
             case "show-data":
                 Graph.showTableData();
-                alert.innerHTML = "&nbsp;";
+                firstAlert.innerHTML = "&nbsp;";
                 state = "calculate-mean";
                 setTimeout(() => {
-                    alert.innerHTML = `Now we will calculate the mean by summing the participant scores, 
+                    firstAlert.innerHTML = `Now we will calculate the mean by summing the participant scores, 
                         <span class="math-ex">x</span>, and dividing by the number of partipants, <span class="math-ex">N</span>`;
                     continueBtn.disabled = false;
                 }, PAUSE);
                 break;
             case "calculate-mean":
-                alert.innerHTML = Graph.getMeanCalculationHTML();
+                firstAlert.innerHTML = Graph.getMeanCalculationHTML();
                 state = "plot-data";
                 setTimeout(() => {
                     continueBtn.disabled = false;
@@ -231,12 +234,12 @@ function doTutorialPage() {
                 }, PAUSE);
                 break;
             case "plot-data":
-                alert.innerHTML = "&nbsp;";
+                firstAlert.innerHTML = "&nbsp;";
                 Utility.fadeIn(document.getElementById("graph1"));
                 Utility.wait(PAUSE)
                     .then(() => {
                         function plotDataCallback() {
-                            alert.innerHTML = `<p>Now we will calculate the deviation from the mean for each score<br>
+                            firstAlert.innerHTML = `<p>Now we will calculate the deviation from the mean for each score<br>
                             <span class="math-ex">( x &minus; x&#772; )</span></p>
                             <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph and vice-versa)</small></p>`;
                             continueBtn.disabled = false;
@@ -246,10 +249,10 @@ function doTutorialPage() {
                     });
                 break;
             case "plot-deviations":
-                alert.innerHTML = "&nbsp;";
+                firstAlert.innerHTML = "&nbsp;";
                 Graph.showTableDeviations();
                 Graph.plotDeviations(() => {
-                    alert.innerHTML = `<p>Now we will calcluate the square of each deviation from the mean<br>
+                    firstAlert.innerHTML = `<p>Now we will calcluate the square of each deviation from the mean<br>
                         <span class="math-ex">( x &minus; x&#772; )</span>&#xb2;</p>
                         <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph and vice-versa)</small></p>`;
                     continueBtn.disabled = false;
@@ -257,8 +260,38 @@ function doTutorialPage() {
                 });
                 break;
             case "plot-squares":
-                alert.innerHTML = "&nbsp;";
+                firstAlert.innerHTML = "&nbsp;";
                 Graph.showTableSquares();
+                Graph.plotSquares(() => {
+                    firstAlert.innerHTML = `
+                        <p>Now we will calculate the sum of the squares of each deviation form the mean<br><span class="math-ex">&sum; ( x &minus; x&#772; )</span>&#xb2;</p>
+                        <p><small class="text-muted">(You can move the mouse cursor over a table entry to highlight it in the graph and vice-versa)</small></p>`;
+                    continueBtn.disabled = false;
+                    state = "sum-squares";
+                });
+                break;
+            case "sum-squares":
+                Graph.sumSquares(() => {
+                    state = "calculate-variance";
+                    continueBtn.disabled = false;
+                });
+                break;
+            case "calculate-variance":
+                stats = Graph.getStats();
+                firstAlert.innerHTML = `<h5>Population Variance</h5>
+                <p class="text-start">If our data (the <span class="math-ex">x</span>'s) encompasses the <strong>entire population</strong> we are interested in, 
+                then the variance is the sum of the squared deviations from the mean divided by the size of the population, <span class="math-ex fw-bold">N</span>.</p>
+                <p class="math-ex fs-5">&sigma;&#xb2; = &sum; ( x &minus; x&#772; )&#xb2; &#8725; N</p>
+                <p>So, for this example, the population variance, 
+                <span class="math-ex">&sigma;&#xb2; = ${stats.sumSquares.toFixed(1)} &#8725; ${stats.N}  = ${stats.populationVar.toFixed(1)}</span></p>`;
+                secondAlert.innerHTML = `<h5>Sample Variance</h5>
+                <p class="text-start">If our data (the <span class="math-ex">x</span>'s) is only a <strong>sample</strong> of a larger population,
+                the variance calculation changes slightly. Instead of dividing the sum of the squared deviations from the mean by <span class="math-ex fw-bold">N</span>
+                it is instead divided by the size of the population divided <strong>minus one:</strong> <span class="math-ex">(N &minus; 1)</span>.</p>
+                <p class="math-ex fs-5">s&#xb2; = &sum; ( x &minus; x&#772; )&#xb2; &#8725; ( N &minus; 1 )</p>
+                <p>So, for this example, the sample variance, 
+                <span class="math-ex">&sigma;&#xb2; = ${stats.sumSquares.toFixed(1)} &#8725; ${stats.N - 1}  = ${stats.sampleVar.toFixed(1)}</span></p>`;
+                secondAlert.style.display = "block";
                 break;
         }
     }
@@ -274,7 +307,7 @@ function doTutorialPage() {
 
     continueBtn.addEventListener("click", continueClick);
     Utility.fadeIn(page)
-        .then(() => setTimeout(() => alert.innerHTML = "First, we will create some data to analyse. In this case, 10 random percentage scores.", PAUSE));
+        .then(() => setTimeout(() => firstAlert.innerHTML = "First, we will create some data to analyse. In this case, 10 random percentage scores.", PAUSE));
 }
 
 function nextTask(result) {

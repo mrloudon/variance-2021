@@ -14,6 +14,9 @@
     <script src="src/jcanvas.min.js"></script>
     <script type="module" src="src/main.js"></script>
     <style>
+        .second-alert {
+            display: none;
+        }
         .math-ex {
             font-family: serif;
             font-weight: bold;
@@ -137,8 +140,10 @@
             </table>
             <canvas id="graph1" width="720" height="480" class="page-content">No support for HTML5 canvas. Please
                 upgrade your ancient browser!</canvas>
-            <div class="alert alert-info text-center">
+            <div class="alert alert-info text-center first-alert">
                 &nbsp;
+            </div>
+            <div class="alert alert-info text-center second-alert">
             </div>
             <div class="text-center">
                 <button type="button" class="btn btn-primary continue-btn">Continue</button>

@@ -25,10 +25,28 @@ const
     X_AXIS_LENGTH = WIDTH - LEFT_PAD - RIGHT_PAD,
     Y_SCALE = Y_AXIS_HEIGHT / Y_MAX;
 
-let canvas, params, xInterval, mean;
+let canvas, params, xInterval, mean, squares = [];
 let graphVisible = false;
 let deviationsVisible = false;
 let squaresVisible = false;
+
+function getStats(){
+    let sumSquares = 0;
+    let total = 0;
+
+    params.data.forEach(item => total += item);
+    squares.forEach(sqr => sumSquares += sqr);
+
+    return {
+        N: params.data.length,
+        squares,
+        sumSquares,
+        total,
+        mean,
+        populationVar: sumSquares / params.data.length,
+        sampleVar: sumSquares / (params.data.length - 1)
+    };
+}
 
 function drawTicks() {
     let i, temp;
@@ -271,7 +289,8 @@ function plotDeviations(callback) {
 
 function plotSquares(callback) {
 
-    let i = 1, timer;
+    let i = 1,
+        timer;
 
     function drawSquare() {
         let
@@ -283,12 +302,11 @@ function plotSquares(callback) {
         } else {
             y = yMean;
         }
-        x = LEFT_PAD + i * xInterval;
+        x = 3 + LEFT_PAD + i * xInterval;
         dev = params.data[i - 1].yVal - mean;
         delta = Math.abs(dev * Y_SCALE);
         canvas.drawRect({
             layer: true,
-            index: 0,
             name: params.data[i - 1].xLabel + "tsd",
             groups: ["squares"],
             fromCenter: false,
@@ -297,12 +315,13 @@ function plotSquares(callback) {
             y: y,
             height: delta,
             width: delta,
+            mousemove: function (layer) {
+                document.getElementById(layer.name).dispatchEvent(new Event("mouseenter"));
+            },
             mouseover: function (layer) {
-                console.log("Over", layer.name);
                 document.getElementById(layer.name).dispatchEvent(new Event("mouseenter"));
             },
             mouseout: function (layer) {
-                console.log("Out", layer.name);
                 document.getElementById(layer.name).dispatchEvent(new Event("mouseleave"));
             }
         });
@@ -429,13 +448,16 @@ function showTableSquares() {
     const tableBody = params.page.querySelector("tbody");
     const squaresRow = document.createElement("tr");
     const th = document.createElement("th");
+    squares = [];
 
     th.innerHTML = "Squared Deviation";
     squaresRow.appendChild(th);
 
     params.data.forEach(item => {
         const td = document.createElement("td");
-        td.innerHTML = ((item.yVal - mean) ** 2).toFixed(1);
+        const square = (item.yVal - mean) ** 2;
+        squares.push(square);
+        td.innerHTML = square.toFixed(1);
         td.id = `${item.xLabel}tsd`;
         td.addEventListener("mouseenter", evt => {
             if (!squaresVisible) {
@@ -502,7 +524,41 @@ function getMeanCalculationHTML() {
 }
 
 function showMeanCalculationResult() {
+    params.page.querySelector("caption").innerHTML = `Mean = <strong>${mean}</strong>`;
     params.page.querySelector("p.mean.invisible").classList.remove("invisible");
+}
+
+function sumSquares(callback) {
+    const alert = params.page.querySelector("div.first-alert");
+    let eqn, head, i = 0,
+        sum = 0;
+
+    eqn = "";
+    head = `<p>Sum of the squared deviations from the mean = <span class="math-ex">&sum; ( x &minus; x&#772; )</span>&#xb2; =</p>`;
+
+    function appendSquare() {
+        const square = squares[i];
+        const elem = document.getElementById(params.data[i].xLabel + "tsd");
+
+        elem.dispatchEvent(new Event("mouseenter"));
+        setTimeout(() => {
+            elem.dispatchEvent(new Event("mouseleave"));
+        }, PAUSE * 0.8);
+
+        sum += square;
+        if (++i === squares.length) {
+            eqn += `${square.toFixed(1)} &equals; ${sum.toFixed(1)}`;
+            params.page.querySelector("caption").innerHTML = `Mean = <strong>${mean}</strong><br>Sum of the squared deviations from the mean = <strong>${sum}</strong>`;
+            alert.innerHTML =  `${head}<p>${eqn}</p><p>Now we can calculate two kinds of variance, the <strong>population</strong> variance and the <strong>sample</strong> variance.</p>`;
+            callback();
+        } else {
+            eqn += `${square.toFixed(1)} &plus; `
+            alert.innerHTML = `${head}<p>${eqn}</p>`;
+            setTimeout(appendSquare, PAUSE);
+        }
+    }
+
+    setTimeout(appendSquare, PAUSE);
 }
 
 function init(paramaters) {
@@ -523,6 +579,7 @@ function init(paramaters) {
 
 export {
     init,
+    getStats,
     showTableData,
     showTableDeviations,
     showTableSquares,
@@ -530,5 +587,6 @@ export {
     showMeanCalculationResult,
     plotData,
     plotDeviations,
-    plotSquares
+    plotSquares,
+    sumSquares
 };

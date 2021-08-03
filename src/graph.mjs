@@ -44,7 +44,9 @@ function getStats(){
         total,
         mean,
         populationVar: sumSquares / params.data.length,
-        sampleVar: sumSquares / (params.data.length - 1)
+        sampleVar: sumSquares / (params.data.length - 1),
+        populationSD: Math.sqrt(sumSquares / params.data.length),
+        sampleSD: Math.sqrt(sumSquares / (params.data.length - 1))
     };
 }
 
@@ -165,7 +167,7 @@ function drawMean(callback) {
     canvas.addLayer({
         type: 'line',
         index: 0,
-        strokeStyle: 'green',
+        strokeStyle: "rgb(0,66,137)",
         strokeWidth: 1,
         x1: LEFT_PAD,
         y1: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * mean,
@@ -519,7 +521,7 @@ function getMeanCalculationHTML() {
             <p><span class="math-ex">x&#772; = &sum; x &#x2215; N = ${total} &#x2215; ${params.data.length} = ${(total / params.data.length).toFixed(1)}</span></p>
             <p>(Remember: <span class="math-ex">&sum; x</span> means "the <em>sum</em> of all the <span class="math-ex">x</span> data" 
                 and <span class="math-ex">x&#772;</span> means "the <em>mean</em> of all the <span class="math-ex">x</span> data")</p>`;
-    html += `<p class="mean invisible">The mean is <strong>${(total / params.data.length).toFixed(1)}</strong>. We will now plot the data and the mean.</p>`;
+    html += `<p class="mean invisible">The mean is <strong>${(total / params.data.length).toFixed(1)}</strong>.</p>`;
     return html;
 }
 
@@ -534,7 +536,7 @@ function sumSquares(callback) {
         sum = 0;
 
     eqn = "";
-    head = `<p>Sum of the squared deviations from the mean = <span class="math-ex">&sum; ( x &minus; x&#772; )</span>&#xb2; =</p>`;
+    head = `<h5>Sum of the Squared Deviations from the Mean</h5><p><span class="math-ex">&sum; ( x &minus; x&#772; )</span>&#xb2; =</p>`;
 
     function appendSquare() {
         const square = squares[i];
@@ -548,8 +550,8 @@ function sumSquares(callback) {
         sum += square;
         if (++i === squares.length) {
             eqn += `${square.toFixed(1)} &equals; ${sum.toFixed(1)}`;
-            params.page.querySelector("caption").innerHTML = `Mean = <strong>${mean}</strong><br>Sum of the squared deviations from the mean = <strong>${sum}</strong>`;
-            alert.innerHTML =  `${head}<p>${eqn}</p><p>Now we can calculate two kinds of variance, the <strong>population</strong> variance and the <strong>sample</strong> variance.</p>`;
+            params.page.querySelector("caption").innerHTML = `Mean = <strong>${mean.toFixed(1)}</strong><br>Sum of the squared deviations from the mean = <strong>${sum.toFixed(1)}</strong>`;
+            alert.innerHTML =  `${head}<p>${eqn}</p>`;
             callback();
         } else {
             eqn += `${square.toFixed(1)} &plus; `

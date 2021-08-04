@@ -4,6 +4,8 @@ const
     TEXT_COLOUR = "#444",
     ALERT_BLUE = "#cff4fc",
     BACKGROUND = "#fafafa",
+    POP_SD_COLOUR = "#EEF3E2",
+    SAM_SD_COLOUR = "#FCF6CF",
     DATUM_DISPLAY_TIME = 200,
     SQUARE_FILL = 'rgba(255,0,0,0.25)',
     SQUARE_HIGHLIGHT_FILL = 'rgba(0,0,255,0.25)',
@@ -30,7 +32,7 @@ let graphVisible = false;
 let deviationsVisible = false;
 let squaresVisible = false;
 
-function getStats(){
+function getStats() {
     let sumSquares = 0;
     let total = 0;
 
@@ -340,6 +342,101 @@ function plotSquares(callback) {
     }, SQUARE_DISPLAY_TIME);
 }
 
+function plotRanges({
+    populationSD,
+    populationLabel,
+    sampleSD,
+    sampleLabel
+}) {
+    var
+        populationY = TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * (mean + populationSD),
+        populationHeight = Y_SCALE * 2 * populationSD,
+        sampleY = TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * (mean + sampleSD),
+        sampleHeight = Y_SCALE * 2 * sampleSD,
+        x = LEFT_PAD + 1,
+        width = X_AXIS_LENGTH - 1;
+
+    canvas.drawRect({
+        layer: true,
+        index: 0,
+        fillStyle: POP_SD_COLOUR,
+        x: x,
+        y: populationY,
+        width: width,
+        height: populationHeight,
+        groups: ["population"],
+        visible: false,
+        fromCenter: false
+    });
+    canvas.addLayer({
+        type: 'text',
+        groups: ["population"],
+        fromCenter: false,
+        visible: false,
+        fillStyle: '#251',
+        strokeStyle: '#25a',
+        strokeWidth: 0,
+        x: LEFT_PAD + 12,
+        y: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * (mean + populationSD) - 12,
+        fontSize: '8pt',
+        fontFamily: 'Verdana, sans-serif',
+        text: populationLabel
+    });
+
+    canvas.drawRect({
+        layer: true,
+        index: 0,
+        fillStyle: SAM_SD_COLOUR,
+        x: x,
+        y: sampleY,
+        width: width,
+        height: sampleHeight,
+        groups: ["sample"],
+        visible: false,
+        fromCenter: false
+    });
+    canvas.addLayer({
+        type: 'text',
+        groups: ["sample"],
+        fromCenter: false,
+        visible: false,
+        fillStyle: '#251',
+        strokeStyle: '#25a',
+        strokeWidth: 0,
+        x: LEFT_PAD + 12,
+        y: TOP_PAD + Y_AXIS_HEIGHT - Y_SCALE * (mean + sampleSD) - 12,
+        fontSize: '8pt',
+        fontFamily: 'Verdana, sans-serif',
+        text: sampleLabel
+    });
+}
+
+function plotPopulationRange() {
+    canvas.setLayerGroup("sample", {
+        visible: false
+    });
+    canvas.setLayerGroup("population", {
+        visible: true
+    });
+    canvas.drawLayers();
+}
+
+function plotSampleRange() {
+    canvas.setLayerGroup("sample", {
+        visible: true
+    });
+    canvas.setLayerGroup("population", {
+        visible: false
+    });
+    canvas.drawLayers();
+}
+
+function hideSquares() {
+    canvas.setLayerGroup("squares", {
+        visible: false
+    }).drawLayers();
+}
+
 function setupTable() {
     const head = params.page.querySelector("thead tr");
     const dataRow = params.page.querySelector("tbody tr.data");
@@ -551,7 +648,7 @@ function sumSquares(callback) {
         if (++i === squares.length) {
             eqn += `${square.toFixed(1)} &equals; ${sum.toFixed(1)}`;
             params.page.querySelector("caption").innerHTML = `Mean = <strong>${mean.toFixed(1)}</strong><br>Sum of the squared deviations from the mean = <strong>${sum.toFixed(1)}</strong>`;
-            alert.innerHTML =  `${head}<p>${eqn}</p>`;
+            alert.innerHTML = `${head}<p>${eqn}</p>`;
             callback();
         } else {
             eqn += `${square.toFixed(1)} &plus; `
@@ -590,5 +687,9 @@ export {
     plotData,
     plotDeviations,
     plotSquares,
-    sumSquares
+    sumSquares,
+    hideSquares,
+    plotRanges,
+    plotSampleRange,
+    plotPopulationRange
 };

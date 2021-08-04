@@ -193,6 +193,7 @@ function doTutorialPage() {
     const caption = page.querySelector("caption");
 
     let state = "show-data";
+    let stats;
     //let state = "calculate-variance";
 
     function generateData(n, min, max) {
@@ -214,7 +215,7 @@ function doTutorialPage() {
     }
 
     function continueClick() {
-        let stats;
+
         continueBtn.disabled = true;
         switch (state) {
             case "show-data":
@@ -311,7 +312,6 @@ function doTutorialPage() {
                 }, PAUSE);
                 break;
             case "calculate-standard-deviation":
-                stats = Graph.getStats();
                 secondAlert.style.display = "none";
                 message.innerHTML = "&nbsp;";
                 firstAlert.innerHTML = `<h5>Standard Deviation</h5><p class="text-start">One drawback of the variance is that it's units are the <strong>square</strong> of the original units.</p>
@@ -326,6 +326,32 @@ function doTutorialPage() {
                 <span class="math-ex fs-5">&sigma; = &#8730;&sigma;&#xb2; = &#8730;${stats.populationVar.toFixed(1)} = ${stats.populationSD.toFixed(1)}</span></p>
                 <p>and the sample standard deviation is:<br><span class="math-ex fs-5">s = &#8730;s&#xb2; = &#8730;${stats.sampleVar.toFixed(1)} = ${stats.sampleSD.toFixed(1)}</span></p>`;
                 continueBtn.disabled = true;
+                state = "plot-range";
+                setTimeout(() => {
+                    continueBtn.disabled = false;
+                    message.innerHTML = "We now have a measure of variance (the standard deviation) that can be directly compared with the original data so let us plot it on our graph."
+                }, PAUSE);
+                break;
+            case "plot-range":
+                Graph.hideSquares();
+                //Graph.plotRange(stats.populationSD, `Standard Deviation (population) = ${stats.populationSD.toFixed(1)}`, POP_SD_COLOUR);
+                Graph.plotRanges({
+                    populationSD: stats.populationSD,
+                    populationLabel: `Standard Deviation (population) = ${stats.populationSD.toFixed(1)}`,
+                    sampleSD: stats.sampleSD,
+                    sampleLabel: `Standard Deviation (sample) = ${stats.sampleSD.toFixed(1)}`
+                });
+                Graph.plotPopulationRange();
+                firstAlert.innerHTML = `
+                    <p>
+                        <button type="button" class="btn btn-secondary btn-sm population-btn">Population SD</button>
+                        <button type="button" class="btn btn-secondary btn-sm sample-btn">Sample SD</button>
+                    </p>
+                    <p class="text-start">Notice that most of the data points fall within one SD (standard deviation) from the mean. 
+                    With normally distributed data, approximately 2/3 of the data will be within 1 SD from the mean given a sufficiently large <strong>N</strong>.</p>
+                    <p><small class="text-muted">Tutorial Completed</small></p>`;
+                page.querySelector(".sample-btn").addEventListener("click", Graph.plotSampleRange);
+                page.querySelector(".population-btn").addEventListener("click", Graph.plotPopulationRange);
                 break;
         }
     }

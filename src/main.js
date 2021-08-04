@@ -363,6 +363,11 @@ function doTutorialPage() {
         }
     }
 
+    const browser = navigator.userAgent.trim().replace(/,/g, ';');
+    $.post("countVariance.php",{browser:  browser},function(response){ 
+        console.log("Server response: " + response);
+    });
+
     Graph.init({
         canvasID: "#graph1",
         title: "Particpant Scores",
@@ -380,6 +385,10 @@ function doTutorialPage() {
 
 function run() {
     console.log("Running.");
+    const browser = navigator.userAgent.trim().replace(/,/g, ';');
+    $.post("count.php",{browser:  browser},function(response){ 
+        console.log("Server response: " + response);
+    });
     doCalculatorPage();
 }
 

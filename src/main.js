@@ -1,8 +1,6 @@
 import * as Utility from "./utility.mjs";
 import * as Graph from "./graph.mjs";
 
-const tasks = [doCalculatorPage, doTutorialPage];
-
 function doCalculatorPage() {
     const page = document.getElementById("first-page");
     const tableBody = page.querySelector("tbody");
@@ -153,7 +151,7 @@ function doCalculatorPage() {
         calculateBtn.removeEventListener("click", calculateBtnClick);
         tutorialBtn.removeEventListener("click", tutorialBtnClick);
         Utility.fadeOut(page)
-            .then(nextTask);
+            .then(doTutorialPage);
     }
 
     function initialisePage() {
@@ -191,6 +189,7 @@ function doTutorialPage() {
     const secondAlert = page.querySelector("div.second-alert");
     const continueBtn = page.querySelector("button.continue-btn");
     const caption = page.querySelector("caption");
+    const homeBtn = page.querySelector("button.home-btn");
 
     let state = "show-data";
     let stats;
@@ -350,8 +349,16 @@ function doTutorialPage() {
                     <p class="text-start">Notice that most of the data points fall within one SD (standard deviation) from the mean. 
                     With normally distributed data, approximately 2/3 of the data will be within 1 SD from the mean given a sufficiently large <strong>N</strong>.</p>
                     <p><small class="text-muted">Tutorial Completed</small></p>`;
+                message.innerHTML = "&nbsp;";
                 page.querySelector(".sample-btn").addEventListener("click", Graph.plotSampleRange);
                 page.querySelector(".population-btn").addEventListener("click", Graph.plotPopulationRange);
+                state = "show-data";
+                continueBtn.disabled = false;
+                continueBtn.classList.add("invisible");
+                homeBtn.classList.remove("invisible");
+                homeBtn.addEventListener("click", function homeBtnClick() {
+                   location.reload();
+                });
                 break;
         }
     }
@@ -370,19 +377,10 @@ function doTutorialPage() {
         .then(() => setTimeout(() => message.innerHTML = "First, we will create some data to analyse. In this case, 10 random percentage scores.", PAUSE));
 }
 
-function nextTask(result) {
-    const task = tasks.shift();
-    if (task) {
-        task(result);
-    }
-    else {
-        console.log("No more tasks.");
-    }
-}
 
 function run() {
     console.log("Running.");
-    nextTask();
+    doCalculatorPage();
 }
 
 Utility.ready(run);
